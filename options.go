@@ -1,0 +1,99 @@
+package graphql
+
+import (
+	"encoding/json"
+	"strconv"
+	"strings"
+
+	"github.com/graphql-go/graphql"
+)
+
+type requestOptions struct {
+	Query         string                 `json:"query" url:"query" schema:"query"`
+	Variables     map[string]interface{} `json:"variables" url:"variables" schema:"variables"`
+	OperationName string                 `json:"operationName" url:"operationName" schema:"operationName"`
+}
+
+func (g *Graphql) getRequestOptions() *requestOptions {
+	r := g.Ctx.Request()
+	if err := r.ParseMultipartForm(32 << 20); err != nil {
+		var opts requestOptions
+		_ = g.Ctx.ReadJSON(&opts)
+		return &opts
+	}
+
+	operationsParam := r.FormValue("operations")
+	var opts requestOptions
+	if err := json.Unmarshal([]byte(operationsParam), &opts); err != nil {
+		return &requestOptions{}
+	}
+
+	mapParam := r.FormValue("map")
+	mapValues := make(map[string][]string)
+	if len(mapParam) != 0 {
+		if err := json.Unmarshal([]byte(mapParam), &mapValues); err != nil {
+			return &requestOptions{}
+		}
+	}
+
+	variables := opts
+
+	for key, value := range mapValues {
+		for _, v := range value {
+			if file, header, err := r.FormFile(key); err == nil {
+
+				// Now set the path in ther variables
+				var node interface{} = variables
+
+				parts := strings.Split(v, ".")
+				last := parts[len(parts)-1]
+
+				for _, vv := range parts[:len(parts)-1] {
+					switch node.(type) {
+					case requestOptions:
+						if vv == "variables" {
+							node = opts.Variables
+						} else {
+							return &requestOptions{}
+						}
+					case map[string]interface{}:
+						node = node.(map[string]interface{})[vv]
+					case []interface{}:
+						if idx, err := strconv.ParseInt(vv, 10, 64); err == nil {
+							node = node.([]interface{})[idx]
+						} else {
+							return &requestOptions{}
+						}
+					default:
+						return &requestOptions{}
+					}
+				}
+
+				data := &MultipartFile{File: file, Header: header}
+
+				switch node.(type) {
+				case map[string]interface{}:
+					node.(map[string]interface{})[last] = data
+				case []interface{}:
+					if idx, err := strconv.ParseInt(last, 10, 64); err == nil {
+						node.([]interface{})[idx] = data
+					} else {
+						return &requestOptions{}
+					}
+				default:
+					return &requestOptions{}
+				}
+			}
+		}
+	}
+	return &opts
+}
+
+func (g *Graphql) newSchema() graphql.Schema {
+	s, _ := graphql.NewSchema(graphql.SchemaConfig{
+		Query:        g.Query.Obj,
+		Mutation:     g.Mutation.Obj,
+		Subscription: g.Subscription.Obj,
+	})
+	return s
+}
