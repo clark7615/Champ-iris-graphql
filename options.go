@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/kataras/iris/v12"
+
 	"github.com/graphql-go/graphql"
 )
 
@@ -14,11 +16,11 @@ type requestOptions struct {
 	OperationName string                 `json:"operationName" url:"operationName" schema:"operationName"`
 }
 
-func (g *Graphql) getRequestOptions() *requestOptions {
-	r := g.Ctx.Request()
+func (g *Graphql) getRequestOptions(Ctx iris.Context) *requestOptions {
+	r := Ctx.Request()
 	if err := r.ParseMultipartForm(32 << 20); err != nil {
 		var opts requestOptions
-		_ = g.Ctx.ReadJSON(&opts)
+		_ = Ctx.ReadJSON(&opts)
 		return &opts
 	}
 

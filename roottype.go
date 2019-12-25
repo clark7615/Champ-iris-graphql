@@ -9,7 +9,7 @@ type RootType struct {
 	fields graphql.Fields
 }
 
-func (s *RootType) New(name, description string) {
+func (s *RootType) new(name, description string) {
 	s.fields = make(map[string]*graphql.Field, 0)
 	config := graphql.ObjectConfig{
 		Name:        name,

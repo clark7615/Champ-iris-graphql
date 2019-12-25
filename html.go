@@ -1,6 +1,6 @@
 package graphql
 
-const html  =`
+const html = `
 {{ define "index" }}
 <!DOCTYPE html>
 
