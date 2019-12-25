@@ -12,7 +12,7 @@ var graph *graphql.Graphql
 
 func init() {
 	graph = graphql.Default()
-	graph.ShowPlayground = true
+	graph.ShowPlayground = false
 }
 
 func TestGraphql(t *testing.T) {

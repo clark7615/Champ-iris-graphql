@@ -16,6 +16,7 @@ func (g *Graphql) PostQuery(Ctx iris.Context) {
 
 func (g *Graphql) GetPg(Ctx iris.Context) {
 	if !g.ShowPlayground {
+		Ctx.StatusCode(404)
 		return
 	}
 	t := template.New("Playground")
