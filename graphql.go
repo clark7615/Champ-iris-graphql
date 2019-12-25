@@ -1,41 +1,42 @@
 package graphql
 
-import (
-	"html/template"
+type CommandType int
 
-	"github.com/graphql-go/graphql"
-	"github.com/kataras/iris/v12"
+const (
+	Query            CommandType = iota
+	Mutation         CommandType = iota
+	Subscription     CommandType = iota
+	QueryAndMutation CommandType = iota
+	All              CommandType = iota
 )
 
 type Graphql struct {
-	Ctx            iris.Context
 	Query          RootType
 	Mutation       RootType
 	Subscription   RootType
 	ShowPlayground bool
 }
 
-func (g *Graphql) PostQuery() {
-	params := g.createParams()
-	res := graphql.Do(params)
-	_, _ = g.Ctx.JSON(res)
+func Default() *Graphql {
+	return New(QueryAndMutation)
 }
 
-func (g *Graphql) GetPg() {
-	if !g.ShowPlayground {
-		return
+func New(commandType CommandType) *Graphql {
+	var ql = &Graphql{}
+	switch commandType {
+	case Query:
+		ql.Query.new("Query", "收尋&取得資料的相關命令")
+	case Mutation:
+		ql.Mutation.new("Mutation", "主要用在建立、修改、刪除的相關命令")
+	case Subscription:
+		ql.Subscription.new("Subscription", "訂閱相關的命令")
+	case QueryAndMutation:
+		ql.Query.new("Query", "收尋&取得資料的相關命令")
+		ql.Mutation.new("Mutation", "主要用在建立、修改、刪除的相關命令")
+	case All:
+		ql.Query.new("Query", "收尋&取得資料的相關命令")
+		ql.Mutation.new("Mutation", "主要用在建立、修改、刪除的相關命令")
+		ql.Subscription.new("Subscription", "訂閱相關的命令")
 	}
-	t := template.New("Playground")
-	te, _ := t.Parse(html)
-	_ = te.ExecuteTemplate(g.Ctx.ResponseWriter(), "index", nil)
-}
-
-func (g *Graphql) createParams() graphql.Params {
-	opt := g.getRequestOptions()
-	return graphql.Params{
-		Schema:         g.newSchema(),
-		RequestString:  opt.Query,
-		VariableValues: opt.Variables,
-		OperationName:  opt.OperationName,
-	}
+	return ql
 }
