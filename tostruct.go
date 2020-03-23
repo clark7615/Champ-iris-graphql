@@ -70,7 +70,7 @@ func assign(dstVal reflect.Value, src interface{}, tagName string) bool {
 		return true
 	case reflect.Struct:
 		if dstVal.Type() == reflect.TypeOf(time.Time{}) {
-			parse, _ := time.Parse("2006/01/02", reflect.ValueOf(src).String())
+			parse, _ := time.ParseInLocation("2006/01/02", reflect.ValueOf(src).String(), time.Local)
 			dstVal.Set(reflect.ValueOf(parse))
 			return true
 		}
