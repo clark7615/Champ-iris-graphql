@@ -56,9 +56,10 @@ func assign(dstVal reflect.Value, src interface{}, tagName string) bool {
 	}
 
 	switch dstVal.Kind() {
-	case reflect.Float32, reflect.Float64:
-		fallthrough
 	case reflect.Bool:
+		dstVal.Set(reflect.ValueOf(src))
+		return true
+	case reflect.Float32, reflect.Float64:
 		fallthrough
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		return coerceInt(dstVal, src)
