@@ -8,11 +8,11 @@ import (
 	"github.com/kataras/iris/v12/mvc"
 )
 
-var graph *graphql.Graphql
+var Graph *graphql.Graphql
 
 func init() {
-	graph = graphql.Default()
-	graph.ShowPlayground = false
+	Graph = graphql.Default()
+	Graph.ShowPlayground = true
 }
 
 func TestGraphql(t *testing.T) {
@@ -24,7 +24,7 @@ func TestGraphql(t *testing.T) {
 	router := champiris.RouterSet{
 		Party: "/service/v1",
 		Router: func(m *mvc.Application) {
-			m.Handle(graph)
+			m.Handle(Graph)
 		},
 	}
 	serivce.AddRoute(router)
