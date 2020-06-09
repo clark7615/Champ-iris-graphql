@@ -27,11 +27,15 @@ func addSchema() {
 				Type:         graphql.Boolean,
 				DefaultValue: true,
 			},
+			"aa": &graphql.ArgumentConfig{
+				Type: graphql.Float,
+			},
 		},
 		Resolve: func(p graphql.ResolveParams) (i interface{}, e error) {
 			type Member struct {
-				ID   int  `json:"id"`
-				Bool bool `json:"bool"`
+				ID   int     `json:"id"`
+				Bool bool    `json:"bool"`
+				AA   float64 `json:"aa"`
 			}
 			member := Member{}
 			Graph.ToStruct(p.Args, &member)

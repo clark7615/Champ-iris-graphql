@@ -60,7 +60,7 @@ func assign(dstVal reflect.Value, src interface{}, tagName string) bool {
 		dstVal.Set(reflect.ValueOf(src))
 		return true
 	case reflect.Float32, reflect.Float64:
-		fallthrough
+		return coerceFloat(dstVal, src)
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		return coerceInt(dstVal, src)
 	case reflect.String:
@@ -146,6 +146,19 @@ func coerceInt(val reflect.Value, src interface{}) bool {
 		val.Set(reflect.ValueOf(i))
 	case reflect.Int64:
 		i := int64(src.(int))
+		val.Set(reflect.ValueOf(i))
+	default:
+		return false
+	}
+	return true
+}
+
+func coerceFloat(val reflect.Value, src interface{}) bool {
+	switch val.Kind() {
+	case reflect.Float64:
+		val.Set(reflect.ValueOf(src))
+	case reflect.Float32:
+		i := float32(src.(float64))
 		val.Set(reflect.ValueOf(i))
 	default:
 		return false
