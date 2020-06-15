@@ -11,7 +11,7 @@ import (
 var Graph *graphql.Graphql
 
 func init() {
-	Graph = graphql.Default()
+	Graph = graphql.New(graphql.All)
 	Graph.ShowPlayground = true
 }
 

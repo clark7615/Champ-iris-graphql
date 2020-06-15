@@ -8,7 +8,18 @@ import (
 )
 
 func addSchema() {
-
+	Graph.Subscription.AddField(&graphql.Field{
+		Name: "qq",
+		Args: graphql.FieldConfigArgument{
+			"id": &graphql.ArgumentConfig{
+				Type: graphql.Int,
+			},
+		},
+		Type: graphql.Int,
+		Resolve: func(p graphql.ResolveParams) (i interface{}, e error) {
+			return p.Args["id"], nil
+		},
+	})
 	Graph.Query.AddField(&graphql.Field{
 		Name: "qq",
 		Type: graphql.Int,
