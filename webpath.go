@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
-	"net/http"
 	"strings"
 	"sync"
 
@@ -15,30 +14,26 @@ import (
 
 var subscribers sync.Map
 
-type ConnectionACKMessage struct {
+type connectionACKMessage struct {
 	*websocket.Conn
 	OperationID string         `json:"id,omitempty"`
 	Type        string         `json:"type"`
 	Payload     requestOptions `json:"payload,omitempty"`
 }
 
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
-	Subprotocols: []string{"graphql-ws"},
-}
-
+//PostQuery Graphql API
+//進入點 POST http://Host:Port/Party/query
+//基於iris mvc 架構
 func (g *Graphql) PostQuery(Ctx iris.Context) {
-	opt := g.getRequestOptions(Ctx)
-	params := g.createParams(opt)
+	params := g.createParams(g.getRequestOptions(Ctx))
 	res := graphql.Do(params)
 	_, _ = Ctx.JSON(res)
 }
 
-func (g *Graphql) GetSubscriptions(Ctx iris.Context) {
+//GetSubscriptions Graphql Apollo Server Subscriptions websocket
+//進入點 GET ws://Host:Port/Party/subscription
+//基於iris mvc 架構
+func (g *Graphql) GetSubscription(Ctx iris.Context) {
 	conn, err := upgrader.Upgrade(Ctx.ResponseWriter(), Ctx.Request(), nil)
 	if err != nil {
 		fmt.Printf("failed to do websocket upgrade: %v", err)
@@ -64,7 +59,7 @@ func (g *Graphql) GetSubscriptions(Ctx iris.Context) {
 				fmt.Println("failed to read websocket message: %v", err)
 				return
 			}
-			var msg ConnectionACKMessage
+			var msg connectionACKMessage
 			msg.Conn = conn
 			if err := json.Unmarshal(p, &msg); err != nil {
 				fmt.Printf("failed to unmarshal: %v", err)
@@ -85,6 +80,8 @@ func (g *Graphql) GetSubscriptions(Ctx iris.Context) {
 	}()
 }
 
+//GetPg Graphql Playground 靜態網頁
+//進入點 GET http://Host:Port/Party/pg
 func (g *Graphql) GetPg(Ctx iris.Context) {
 	if !g.ShowPlayground {
 		Ctx.StatusCode(404)
@@ -101,13 +98,4 @@ func (g *Graphql) GetPg(Ctx iris.Context) {
 		Endpoint:             endpoint,
 		SubscriptionEndpoint: subEndpoint,
 	})
-}
-
-func (g *Graphql) createParams(opt *requestOptions) graphql.Params {
-	return graphql.Params{
-		Schema:         g.newSchema(),
-		RequestString:  opt.Query,
-		VariableValues: opt.Variables,
-		OperationName:  opt.OperationName,
-	}
 }

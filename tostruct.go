@@ -6,7 +6,8 @@ import (
 	"time"
 )
 
-func (Graphql) ToStruct(in interface{}, out interface{}) {
+//ToStruct Map[String]interface to Struct
+func ToStruct(in interface{}, out interface{}) {
 	v := reflect.ValueOf(out)
 	if v.IsValid() == false {
 		panic("not valid")

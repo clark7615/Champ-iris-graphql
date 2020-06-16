@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	QL "git.championtek.com.tw/go/champiris-contrib/graphql"
 	"github.com/graphql-go/graphql"
 )
 
@@ -49,7 +50,7 @@ func addSchema() {
 				AA   float64 `json:"aa"`
 			}
 			member := Member{}
-			Graph.ToStruct(p.Args, &member)
+			QL.ToStruct(p.Args, &member)
 			fmt.Println(member)
 			return member.ID, nil
 		},

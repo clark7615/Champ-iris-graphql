@@ -9,30 +9,32 @@ import (
 	"github.com/graphql-go/graphql"
 )
 
-type CommandType int
+type commandType int
 
 type Graphql struct {
-	Query          RootType
-	Mutation       RootType
-	Subscription   RootType
+	Query          rootType
+	Mutation       rootType
+	Subscription   rootType
 	ShowPlayground bool
 }
 
 const (
-	Query            CommandType = iota
-	Mutation         CommandType = iota
-	Subscription     CommandType = iota
-	QueryAndMutation CommandType = iota
-	All              CommandType = iota
+	Query            commandType = iota
+	Mutation         commandType = iota
+	Subscription     commandType = iota
+	QueryAndMutation commandType = iota
+	All              commandType = iota
 )
 
 var ql *Graphql
 
+//Default 建立一個 Graphql 實體並包含 Query以及Mutation RootType
 func Default() *Graphql {
 	return New(QueryAndMutation)
 }
 
-func New(commandType CommandType) *Graphql {
+//New 依據CommandType建立一個Graphql 實體並新增對應之RootType
+func New(commandType commandType) *Graphql {
 	if ql == nil {
 		ql = new(Graphql)
 	}
@@ -58,7 +60,7 @@ func runSubscription(g *Graphql) {
 	for {
 		time.Sleep(2 * time.Second)
 		subscribers.Range(func(key, value interface{}) bool {
-			msg, ok := value.(*ConnectionACKMessage)
+			msg, ok := value.(*connectionACKMessage)
 			if !ok {
 				return true
 			}
