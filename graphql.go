@@ -26,8 +26,6 @@ const (
 	All              commandType = iota
 )
 
-var ql *Graphql
-
 //Default 建立一個 Graphql 實體並包含 Query以及Mutation RootType
 func Default() *Graphql {
 	return New(QueryAndMutation)
@@ -35,9 +33,7 @@ func Default() *Graphql {
 
 //New 依據CommandType建立一個Graphql 實體並新增對應之RootType
 func New(commandType commandType) *Graphql {
-	if ql == nil {
-		ql = new(Graphql)
-	}
+	ql := new(Graphql)
 	switch commandType {
 	case Query:
 		ql.Query.new("Query", "收尋&取得資料的相關命令")
@@ -47,11 +43,12 @@ func New(commandType commandType) *Graphql {
 		ql.Subscription.new("Subscription", "訂閱相關的命令")
 		go runSubscription(ql)
 	case All:
-		New(Subscription)
+		ql.Subscription.new("Subscription", "訂閱相關的命令")
+		go runSubscription(ql)
 		fallthrough
 	case QueryAndMutation:
-		New(Query)
-		New(Mutation)
+		ql.Query.new("Query", "收尋&取得資料的相關命令")
+		ql.Mutation.new("Mutation", "主要用在建立、修改、刪除的相關命令")
 	}
 	return ql
 }
