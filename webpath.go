@@ -2,8 +2,8 @@ package graphql
 
 import (
 	"encoding/json"
+	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 	"strings"
 	"sync"
@@ -32,7 +32,8 @@ var upgrader = websocket.Upgrader{
 }
 
 func (g *Graphql) PostQuery(Ctx iris.Context) {
-	params := g.createParams(Ctx)
+	opt := g.getRequestOptions(Ctx)
+	params := g.createParams(opt)
 	res := graphql.Do(params)
 	_, _ = Ctx.JSON(res)
 }
@@ -40,17 +41,17 @@ func (g *Graphql) PostQuery(Ctx iris.Context) {
 func (g *Graphql) GetSubscriptions(Ctx iris.Context) {
 	conn, err := upgrader.Upgrade(Ctx.ResponseWriter(), Ctx.Request(), nil)
 	if err != nil {
-		log.Printf("failed to do websocket upgrade: %v", err)
+		fmt.Printf("failed to do websocket upgrade: %v", err)
 		return
 	}
 	connectionACK, err := json.Marshal(map[string]string{
 		"type": "connection_ack",
 	})
 	if err != nil {
-		log.Printf("failed to marshal ws connection ack: %v", err)
+		fmt.Printf("failed to marshal ws connection ack: %v", err)
 	}
 	if err := conn.WriteMessage(websocket.TextMessage, connectionACK); err != nil {
-		log.Printf("failed to write to ws connection: %v", err)
+		fmt.Printf("failed to write to ws connection: %v", err)
 		return
 	}
 	go func() {
@@ -60,13 +61,13 @@ func (g *Graphql) GetSubscriptions(Ctx iris.Context) {
 				return
 			}
 			if err != nil {
-				log.Println("failed to read websocket message: %v", err)
+				fmt.Println("failed to read websocket message: %v", err)
 				return
 			}
 			var msg ConnectionACKMessage
 			msg.Conn = conn
 			if err := json.Unmarshal(p, &msg); err != nil {
-				log.Printf("failed to unmarshal: %v", err)
+				fmt.Printf("failed to unmarshal: %v", err)
 				return
 			}
 			if msg.Type == "start" {
@@ -80,7 +81,6 @@ func (g *Graphql) GetSubscriptions(Ctx iris.Context) {
 			if msg.Type == "stop" {
 				subscribers.Delete(msg.OperationID)
 			}
-
 		}
 	}()
 }
@@ -92,19 +92,18 @@ func (g *Graphql) GetPg(Ctx iris.Context) {
 	}
 	t := template.New("Playground")
 	te, _ := t.Parse(html)
-	path := Ctx.RequestPath(true)
-	path = strings.Replace(path, "pg", "query", 1)
+	endpoint := strings.Replace(Ctx.RequestPath(true), "pg", "query", 1)
+	subEndpoint := strings.Replace(endpoint, "query", "subscription", 1)
 	_ = te.ExecuteTemplate(Ctx.ResponseWriter(), "index", struct {
 		Endpoint             string
 		SubscriptionEndpoint string
 	}{
-		Endpoint:             path,
-		SubscriptionEndpoint: path,
+		Endpoint:             endpoint,
+		SubscriptionEndpoint: subEndpoint,
 	})
 }
 
-func (g *Graphql) createParams(Ctx iris.Context) graphql.Params {
-	opt := g.getRequestOptions(Ctx)
+func (g *Graphql) createParams(opt *requestOptions) graphql.Params {
 	return graphql.Params{
 		Schema:         g.newSchema(),
 		RequestString:  opt.Query,

@@ -5,9 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kataras/iris/v12"
-
 	"github.com/graphql-go/graphql"
+	"github.com/kataras/iris/v12"
 )
 
 type requestOptions struct {
