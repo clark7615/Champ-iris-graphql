@@ -493,6 +493,7 @@ const html = `
       GraphQLPlayground.init(root, {
         // you can add more options here
 		endpoint: {{ .Endpoint }},
+		subscriptionEndpoint: {{ .SubscriptionEndpoint }}
       })
     })
   </script>

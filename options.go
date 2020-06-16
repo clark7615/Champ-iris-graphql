@@ -2,18 +2,46 @@ package graphql
 
 import (
 	"encoding/json"
+	"net/http"
 	"strconv"
 	"strings"
 
-	"github.com/kataras/iris/v12"
-
+	"github.com/gorilla/websocket"
 	"github.com/graphql-go/graphql"
+	"github.com/kataras/iris/v12"
 )
 
 type requestOptions struct {
 	Query         string                 `json:"query" url:"query" schema:"query"`
 	Variables     map[string]interface{} `json:"variables" url:"variables" schema:"variables"`
 	OperationName string                 `json:"operationName" url:"operationName" schema:"operationName"`
+}
+
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
+	Subprotocols: []string{"graphql-ws"},
+}
+
+func (g *Graphql) newSchema() graphql.Schema {
+	s, _ := graphql.NewSchema(graphql.SchemaConfig{
+		Query:        g.Query.Obj,
+		Mutation:     g.Mutation.Obj,
+		Subscription: g.Subscription.Obj,
+	})
+	return s
+}
+
+func (g *Graphql) createParams(opt *requestOptions) graphql.Params {
+	return graphql.Params{
+		Schema:         g.newSchema(),
+		RequestString:  opt.Query,
+		VariableValues: opt.Variables,
+		OperationName:  opt.OperationName,
+	}
 }
 
 func (g *Graphql) getRequestOptions(Ctx iris.Context) *requestOptions {
@@ -44,7 +72,6 @@ func (g *Graphql) getRequestOptions(Ctx iris.Context) *requestOptions {
 		for _, v := range value {
 			if file, header, err := r.FormFile(key); err == nil {
 
-				// Now set the path in ther variables
 				var node interface{} = variables
 
 				parts := strings.Split(v, ".")
@@ -89,13 +116,4 @@ func (g *Graphql) getRequestOptions(Ctx iris.Context) *requestOptions {
 		}
 	}
 	return &opts
-}
-
-func (g *Graphql) newSchema() graphql.Schema {
-	s, _ := graphql.NewSchema(graphql.SchemaConfig{
-		Query:        g.Query.Obj,
-		Mutation:     g.Mutation.Obj,
-		Subscription: g.Subscription.Obj,
-	})
-	return s
 }

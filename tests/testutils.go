@@ -4,11 +4,23 @@ import (
 	"errors"
 	"fmt"
 
+	QL "git.championtek.com.tw/go/champiris-contrib/graphql"
 	"github.com/graphql-go/graphql"
 )
 
 func addSchema() {
-
+	Graph.Subscription.AddField(&graphql.Field{
+		Name: "qq",
+		Args: graphql.FieldConfigArgument{
+			"id": &graphql.ArgumentConfig{
+				Type: graphql.Int,
+			},
+		},
+		Type: graphql.Int,
+		Resolve: func(p graphql.ResolveParams) (i interface{}, e error) {
+			return p.Args["id"], nil
+		},
+	})
 	Graph.Query.AddField(&graphql.Field{
 		Name: "qq",
 		Type: graphql.Int,
@@ -38,7 +50,7 @@ func addSchema() {
 				AA   float64 `json:"aa"`
 			}
 			member := Member{}
-			Graph.ToStruct(p.Args, &member)
+			QL.ToStruct(p.Args, &member)
 			fmt.Println(member)
 			return member.ID, nil
 		},
