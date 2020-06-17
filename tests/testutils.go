@@ -2,23 +2,31 @@ package tests
 
 import (
 	"errors"
-	"fmt"
 
 	QL "git.championtek.com.tw/go/champiris-contrib/graphql"
 	"github.com/graphql-go/graphql"
 )
 
 func addSchema() {
+	type Member struct {
+		Account string  `json:"account"`
+		Bool    bool    `json:"bool"`
+		AA      float64 `json:"aa"`
+	}
+	var member = graphql.NewObject(graphql.ObjectConfig{
+		Name:   "Member",
+		Fields: graphql.BindFields(Member{}),
+	})
 	Graph.Subscription.AddField(&graphql.Field{
-		Name: "qq",
+		Name: "Member",
 		Args: graphql.FieldConfigArgument{
-			"id": &graphql.ArgumentConfig{
-				Type: graphql.Int,
+			"account": &graphql.ArgumentConfig{
+				Type: graphql.String,
 			},
 		},
-		Type: graphql.Int,
+		Type: graphql.Boolean,
 		Resolve: func(p graphql.ResolveParams) (i interface{}, e error) {
-			return p.Args["id"], nil
+			return true, nil
 		},
 	})
 	Graph.Query.AddField(&graphql.Field{
@@ -28,12 +36,13 @@ func addSchema() {
 			return 1, errors.New("WTF")
 		},
 	})
+
 	Graph.Mutation.AddField(&graphql.Field{
-		Name: "ff",
-		Type: graphql.Int,
+		Name: "Member",
+		Type: member,
 		Args: graphql.FieldConfigArgument{
-			"id": &graphql.ArgumentConfig{
-				Type: graphql.Int,
+			"account": &graphql.ArgumentConfig{
+				Type: graphql.String,
 			},
 			"bool": &graphql.ArgumentConfig{
 				Type:         graphql.Boolean,
@@ -44,15 +53,12 @@ func addSchema() {
 			},
 		},
 		Resolve: func(p graphql.ResolveParams) (i interface{}, e error) {
-			type Member struct {
-				ID   int     `json:"id"`
-				Bool bool    `json:"bool"`
-				AA   float64 `json:"aa"`
-			}
 			member := Member{}
 			QL.ToStruct(p.Args, &member)
-			fmt.Println(member)
-			return member.ID, nil
+			Graph.CheckSubscription("Member", map[string]interface{}{
+				"account": member.Account,
+			})
+			return member, nil
 		},
 	})
 }
