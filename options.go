@@ -15,6 +15,7 @@ type requestOptions struct {
 	Query         string                 `json:"query" url:"query" schema:"query"`
 	Variables     map[string]interface{} `json:"variables" url:"variables" schema:"variables"`
 	OperationName string                 `json:"operationName" url:"operationName" schema:"operationName"`
+	UUID          string                 `json:"UUID,omitempty"`
 }
 
 var upgrader = websocket.Upgrader{

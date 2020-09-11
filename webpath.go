@@ -49,9 +49,11 @@ func (g *Graphql) GetSubscription(Ctx iris.Context) {
 		fmt.Printf("failed to write to ws connection: %v", err)
 		return
 	}
+	var msg connectionACKMessage
+	msg.Conn = conn
 	go func() {
 		for {
-			_, p, err := conn.ReadMessage()
+			_, p, err := msg.Conn.ReadMessage()
 			if websocket.IsCloseError(err, websocket.CloseGoingAway) {
 				return
 			}
@@ -59,8 +61,6 @@ func (g *Graphql) GetSubscription(Ctx iris.Context) {
 				fmt.Println("failed to read websocket message: %v", err)
 				return
 			}
-			var msg connectionACKMessage
-			msg.Conn = conn
 			if err := json.Unmarshal(p, &msg); err != nil {
 				fmt.Printf("failed to unmarshal: %v", err)
 				return
@@ -71,10 +71,10 @@ func (g *Graphql) GetSubscription(Ctx iris.Context) {
 					length++
 					return true
 				})
-				subscribers.Store(msg.OperationID, &msg)
+				subscribers.Store(msg.Payload.UUID, &msg)
 			}
 			if msg.Type == "stop" {
-				subscribers.Delete(msg.OperationID)
+				subscribers.Delete(msg.Payload.UUID)
 			}
 		}
 	}()
