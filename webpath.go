@@ -71,10 +71,18 @@ func (g *Graphql) GetSubscription(Ctx iris.Context) {
 					length++
 					return true
 				})
-				subscribers.Store(msg.Payload.UUID, &msg)
+				if msg.Payload.UUID != "" {
+					subscribers.Store(msg.Payload.UUID, &msg)
+				} else {
+					subscribers.Store(Ctx.GetHeader("Sec-Websocket-Key"), &msg)
+				}
 			}
 			if msg.Type == "stop" {
-				subscribers.Delete(msg.Payload.UUID)
+				if msg.Payload.UUID != "" {
+					subscribers.Delete(msg.Payload.UUID)
+				} else {
+					subscribers.Delete(Ctx.GetHeader("Sec-Websocket-Key"))
+				}
 			}
 		}
 	}()
