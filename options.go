@@ -29,9 +29,9 @@ var upgrader = websocket.Upgrader{
 
 func (g *Graphql) newSchema() graphql.Schema {
 	s, _ := graphql.NewSchema(graphql.SchemaConfig{
-		Query:        g.Query.Obj,
-		Mutation:     g.Mutation.Obj,
-		Subscription: g.Subscription.Obj,
+		Query:        g.Query.Object,
+		Mutation:     g.Mutation.Object,
+		Subscription: g.Subscription.Object,
 	})
 	return s
 }

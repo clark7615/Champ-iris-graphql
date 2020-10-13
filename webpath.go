@@ -25,6 +25,14 @@ type connectionACKMessage struct {
 //進入點 POST http://Host:Port/Party/query
 //基於iris mvc 架構
 func (g *Graphql) PostQuery(Ctx iris.Context) {
+	if !g.ShowPlayground {
+		graphql.SchemaMetaFieldDef.Resolve = func(p graphql.ResolveParams) (interface{}, error) {
+			return nil, nil
+		}
+		graphql.TypeMetaFieldDef.Resolve = func(p graphql.ResolveParams) (interface{}, error) {
+			return nil, nil
+		}
+	}
 	params := g.createParams(g.getRequestOptions(Ctx))
 	res := graphql.Do(params)
 	_, _ = Ctx.JSON(res)

@@ -5,7 +5,7 @@ import (
 )
 
 type rootType struct {
-	Obj    *graphql.Object
+	*graphql.Object
 	fields graphql.Fields
 }
 
@@ -23,5 +23,5 @@ func (s *rootType) new(name, description string) {
 		Fields:      s.fields,
 		Description: description,
 	}
-	s.Obj = graphql.NewObject(config)
+	s.Object = graphql.NewObject(config)
 }
